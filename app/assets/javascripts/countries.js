@@ -653,6 +653,7 @@ gfw.ui.view.CountriesShow = cdb.core.View.extend({
           });
       });
     } else if (type === 'comp') {
+      // threshold > 0 - loss and gain
       var sql = 'SELECT y2001_y2012 as gain, (SELECT SUM(';
 
       for(var y = 2001; y < 2012; y++) {
@@ -887,6 +888,7 @@ gfw.ui.view.CountriesOverview = cdb.core.View.extend({
     e && e.preventDefault();
 
     if(this.model.get('graph') === 'total_loss') {
+      // threshold > 0 loss to match gain
       var sql = 'WITH loss as (SELECT iso, SUM(';
 
       for(var y = 2001; y < 2012; y++) {
@@ -901,6 +903,7 @@ gfw.ui.view.CountriesOverview = cdb.core.View.extend({
               FROM loss, gfw2_countries c\
               WHERE loss.iso = c.iso\
               AND NOT sum_loss = 0\
+              AND c.enabled is true\
               ORDER BY sum_loss DESC ';
 
       if(e) {
@@ -1389,6 +1392,7 @@ gfw.ui.view.CountriesOverview = cdb.core.View.extend({
           });
       });
     } else if (this.model.get('graph') === ('total_extent')) {
+      // threshold > 25 to match extent
       var sql = 'SELECT ';
 
       for(var y = 2001; y < 2012; y++) {
@@ -1402,7 +1406,7 @@ gfw.ui.view.CountriesOverview = cdb.core.View.extend({
       }
 
       sql += "extent.y2012 as extent_y2012\
-              FROM countries_loss loss, countries_extent extent\
+              FROM loss_gt_25 loss, countries_extent extent\
               WHERE loss.iso = extent.iso\
               AND loss.iso = '"+iso+"'";
 
@@ -1561,6 +1565,7 @@ gfw.ui.view.CountriesOverview = cdb.core.View.extend({
       .attr('stop-opacity', 1);
 
     if (this.model.get('graph') === 'total_loss') {
+      // threshold 0 - loss and gain
       this._showYears();
 
       svg.append('text')
@@ -1737,14 +1742,14 @@ gfw.ui.view.CountriesOverview = cdb.core.View.extend({
       }
 
       sql += 'SUM(y2012) as sum_loss_y2012\
-              FROM countries_loss), extent as (SELECT ';
+              FROM loss_gt_25), extent as (SELECT ';
 
       for(var y = 2001; y < 2012; y++) {
         sql += 'SUM(y'+y+') as sum_extent_y'+y+', ';
       }
 
       sql += 'SUM(y2012) as sum_extent_y2012\
-              FROM countries_extent)\
+              FROM extent_gt_25)\
               SELECT ';
 
       for(var y = 2001; y < 2012; y++) {
@@ -2744,6 +2749,7 @@ gfw.ui.view.CountriesEmbedShow = cdb.core.View.extend({
           });
       });
     } else if (type === 'comp') {
+      // threshold > 0
       var sql = 'SELECT y2001_y2012 as gain, (SELECT SUM(';
 
       for(var y = 2001; y < 2012; y++) {
