@@ -78,6 +78,7 @@ GFW.modules.app = function(gfw) {
       this.umdCoverageLayer   = null;
       this.forest2000Layer    = null;
       this.forestGainLayer    = null;
+      this.idnPrimaryLayer    = null;
 
       this.currentBaseLayer = config.BASELAYER;
     },
@@ -275,6 +276,7 @@ GFW.modules.app = function(gfw) {
         if (table_name == 'protected_areas') { this._removeSpecialLayer(); }
         if (table_name == 'pantropical') { this._removePantropicalLayer(); }
         if (table_name == 'forest2000') { this._removeForest2000Layer(); }
+        if (table_name == 'idn_primary') { this._removeIdnPrimaryLayer(); }
         if (table_name == 'forestgain') {
           this.layers = _.without(this.layers, layer.get('table_name'));
 
@@ -303,6 +305,7 @@ GFW.modules.app = function(gfw) {
         if (table_name == 'protected_areas') { this._renderExternalLayer(); }
         if (table_name == 'pantropical') { this._renderPantropicalLayer(); }
         if (table_name == 'forest2000') { this._renderForest2000Layer(); }
+        if (table_name == 'idn_primary') {this._renderIdnPrimaryLayer(); }
         if (table_name == 'forestgain') { this._renderForestGainLayer(); }
       } else {
         this.layers.push(layer.get('table_name'));
@@ -327,17 +330,6 @@ GFW.modules.app = function(gfw) {
     _removeForest2000Layer: function() {
       if (this.forest2000Layer) {
         this.forest2000Layer.hide();
-        // var layers = map.overlayMapTypes.getArray();
-
-        // for (var i = 0; i <= layers.length; i++) {
-        //   if (layers[i] == this.forest2000Layer) {
-        //     if (this.forest2000Layer) {
-        //       this.forest2000Layer.setOpacity(0);
-        //       this.forest2000Layer = null;
-        //       map.overlayMapTypes.setAt(i, null);
-        //     }
-        //   }
-        // }
       }
     },
 
@@ -480,78 +472,26 @@ GFW.modules.app = function(gfw) {
       }
     },
     
+    _renderIdnPrimaryLayer: function() {
+      console.log('ey');
+      if (this.idnPrimaryLayer) {
+        this.idnPrimaryLayer.show();
+      } else {
+        this.idnPrimaryLayer = IdnPrimary.init(map);
+      }
+    },
+
+    _removeIdnPrimaryLayer: function() {
+      if (this.idnPrimaryLayer) {
+        this.idnPrimaryLayer.hide();
+      }
+    },
+
     _renderForest2000Layer: function() {
       if (this.forest2000Layer) {
         this.forest2000Layer.show();
-        // this.forest2000Layer.setOpacity(1);
       } else {
         this.forest2000Layer = Forest2000.init(map);
-
-        // function CoordMapType() { }
-
-        // CoordMapType.prototype.tileSize = new google.maps.Size(256,256);
-        // CoordMapType.prototype.maxZoom = 17;
-        // CoordMapType.prototype.setOpacity = function(opacity) {
-        //   $('.tree_alpha').css('opacity', opacity);
-        // };
-
-        // CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
-        //   var x = coord.x;
-        //   var y = coord.y;
-        //   var z = zoom;
-
-        //   var zsteps = zoom - 12;
-
-        //   if (zoom > 12) {
-        //     x = Math.floor(coord.x/(Math.pow(2, zoom - 12)));
-        //     y = Math.floor(coord.y/(Math.pow(2, zoom - 12)));
-        //     z = 12;
-        //   } else {
-        //     y = (y > Math.pow(2,z) ? y % Math.pow(2,z) : y);
-            
-        //     if (x >= Math.pow(2,z)) {
-        //       x = x % Math.pow(2,z);
-        //     } else if (x < 0) {
-        //       x = Math.pow(2,z) - Math.abs(x);
-        //     }
-        //   }
-
-        //   var url = 'http://earthengine.google.org/static/hansen_2013/tree_alpha/' + z + '/' + x + '/' + y + '.png';
-
-        //   var image = new Image();
-        //   image.src = url;
-        //   image.className += 'tree_alpha';
-
-        //   if (zsteps <= 0) return image;
-
-        //   image.width = 256 * Math.pow(2, zsteps);
-        //   image.height = 256 * Math.pow(2, zsteps);
-
-        //   if (zsteps > 0) {
-        //     var srcX = 256 * (coord.x % Math.pow(2, zsteps));
-        //     var srcY = 256 * (coord.y % Math.pow(2, zsteps));
-
-        //     image.style.position = 'absolute';
-        //     image.style.top      = -srcY + 'px';
-        //     image.style.left     = -srcX + 'px';
-        //   }
-
-        //   var div = ownerDocument.createElement('div');
-        //   div.appendChild(image);
-        //   div.style.width = this.tileSize.width + 'px';
-        //   div.style.height = this.tileSize.height + 'px';
-        //   div.style.position = 'relative';
-        //   div.style.overflow = 'hidden';
-        //   div.className += 'tree_alpha';
-
-        //   return div;
-        // };
-
-        // CoordMapType.prototype.name = 'Tile #s';
-        // CoordMapType.prototype.alt = 'Tile Coordinate Map Type';
-
-        // this.forest2000Layer = new CoordMapType();
-        // map.overlayMapTypes.insertAt(0, this.forest2000Layer);
       }
     },
 
@@ -1551,6 +1491,15 @@ GFW.modules.maplayer = function(gfw) {
         }
 
         Filter.toggle(id);
+      } else if (slug === 'idn_primary') {
+        if (idnforest.attributes['visible']) {
+          GFW.app._renderIdnPrimaryLayer();
+          ga('send', 'event', 'Filter', 'Toggle', slug);
+        } else {
+          GFW.app._removeIdnPrimaryLayer();
+        }
+
+        Filter.toggle(id);
       } else {
         if (slug === 'biodiversity_hotspots') {
           GFW.app.closeInfowindows();
@@ -1619,6 +1568,18 @@ GFW.modules.datalayers = function(gfw) {
         forestgain         = GFW.app.datalayers.LayersObj.get(596);
         umd_tree_loss_gain = GFW.app.datalayers.LayersObj.get(597);
         cover_extent       = GFW.app.datalayers.LayersObj.get(591);
+
+        //// add idnforest manually
+        idnforest = cover_extent.toJSON();
+        idnforest.id = 600;
+        idnforest.title = 'Indonesia primary forest';
+        idnforest.slug = 'idn_primary';
+        idnforest.table_name = 'idn_primary';
+        idnforest.title_color = '#007A4D';
+        this.add([idnforest]);
+
+        idnforest = GFW.app.datalayers.LayersObj.get(600);
+        ////
 
         that.LayersObj.each(function(p) {
           if (p.get('slug') === 'user_stories') {
