@@ -37,7 +37,7 @@ define([
       mps.subscribe('Place/go', _.bind(function(place) {
         this._setBaselayer(place.params.layerSpec);
 
-        if (place.params.iso !== 'ALL') {
+        if (place.params.iso.iso !== 'ALL') {
           this._drawIso(place.params.iso);
         } else if (place.params.geom) {
           this._drawGeom(place.params.geom);
@@ -99,11 +99,22 @@ define([
      *
      * @param  {string} iso Country iso
      */
-    _drawIso: function(iso) {
-      countryService.execute(iso, _.bind(function(results) {
+    _drawIso: function(data) {
+      var resource = {
+        iso: data.iso
+      };
+
+      if (data.regionId) {
+        resource.regionId = _.toNumber(data.regionId);
+      }
+
+      this.currentAnalysis = resource;
+      console.log(resource);
+      countryService.execute(resource, _.bind(function(results) {
+        console.log(results);
         this.view.drawIso(results.topojson);
         // mps.publish('Map/fit-bounds', [bounds]);
-        this.publishAnalysis({iso: iso});
+        this.publishAnalysis(resource);
       },this));
     },
 
@@ -182,7 +193,7 @@ define([
       var p = {};
 
       if (this.currentAnalysis.iso) {
-        p.iso = this.currentAnalysis.iso;
+        p.iso = _.compact(_.values(this.currentAnalysis)).join('-');
       } else if (this.currentAnalysis.geom) {
         p.geom = encodeURIComponent(this.currentAnalysis.geom);
       }

@@ -10,17 +10,19 @@ define([
   'use strict';
 
   var CountryService = Class.extend({
-    
-    _uriTemplate:'http://beta.gfw-apis.appspot.com/countries/{iso}',
+
+    _uriTemplate:'http://beta.gfw-apis.appspot.com/countries/{iso}/{regionId}',
 
     /**
      * Constructs a new instance of CountryService.
-     * 
+     *
      * @return {CountryService} instance
      */
     init: function() {
       this._defineRequests();
     },
+
+    requestId: 'CountryService',
 
     /**
      * The configuration for client side caching of results.
@@ -36,8 +38,8 @@ define([
       ds.define(this.requestId, config);
     },
 
-    execute: function(iso, successCb, failureCb) {
-      var config = {resourceId: this.requestId, data: {iso: iso}, 
+    execute: function(data, successCb, failureCb) {
+      var config = {resourceId: this.requestId, data: data,
         success: successCb, error: failureCb};
 
       ds.request(config);

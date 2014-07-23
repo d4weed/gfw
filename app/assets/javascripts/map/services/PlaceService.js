@@ -165,11 +165,14 @@ define([
       p.lat = _.toNumber(p.lat);
       p.lng = _.toNumber(p.lng);
       p.maptype = p.maptype;
-      p.iso = p.iso;
+      if (p.geom) {p.geom = decodeURIComponent(p.geom);}
 
-      if (p.geom) {
-        p.geom = decodeURIComponent(p.geom);
-      }
+      // Iso
+      var isoArr = p.iso.split('-');
+      p.iso = {
+        iso: isoArr[0],
+        regionId: isoArr[1]
+      };
 
       return p;
     },
@@ -185,27 +188,25 @@ define([
     _destandardizeParams: function(params) {
       var p = params;
 
-      if (params.name === 'map') {
-        p.lat = _.toNumber(p.lat).toFixed(2);
-        p.lng = _.toNumber(p.lng).toFixed(2);
+      if (params.name !== 'map') {return p;}
+      p.lat = _.toNumber(p.lat).toFixed(2);
+      p.lng = _.toNumber(p.lng).toFixed(2);
+      p.iso = _.compact(_.values(p.iso)).join('-');
+      if (p.geom) {p.geom = encodeURIComponent(p.geom);}
 
-        if (p.geom) {
-          p.geom = encodeURIComponent(p.geom);
-        }
-
-        if (p.layerSpec) {
-          var date = [];
-          _.each(p.layerSpec.getBaselayers(), function(layer) {
-            if (layer.currentDate) {
-              date.push('{0}-{1}'.format(layer.currentDate[0].format('X'),
-                layer.currentDate[1].format('X')));
-            }
-          });
-          if (date.length > 0) {
-            p.date = date.join(',');
-          } else {
-            delete p.date;
+      // Date
+      if (p.layerSpec) {
+        var date = [];
+        _.each(p.layerSpec.getBaselayers(), function(layer) {
+          if (layer.currentDate) {
+            date.push('{0}-{1}'.format(layer.currentDate[0].format('X'),
+              layer.currentDate[1].format('X')));
           }
+        });
+        if (date.length > 0) {
+          p.date = date.join(',');
+        } else {
+          delete p.date;
         }
       }
 
